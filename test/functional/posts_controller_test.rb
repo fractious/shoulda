@@ -13,7 +13,7 @@ class PostsControllerTest < Test::Unit::TestCase
     @response   = ActionController::TestResponse.new
     @post       = Post.find(:first)
   end
-  
+
   # autodetects the :controller
   should_route :get,    '/posts',     :action => :index
   # explicitly specify :controller
@@ -24,7 +24,7 @@ class PostsControllerTest < Test::Unit::TestCase
   should_route :put,    '/posts/1',   :action => :update, :id => "1"
   should_route :delete, '/posts/1',   :action => :destroy, :id => 1
   should_route :get,    '/posts/new', :action => :new
-  
+
   # Test the nested routes
   should_route :get,    '/users/5/posts',     :action => :index, :user_id => 5
   should_route :post,   '/users/5/posts',     :action => :create, :user_id => 5
@@ -86,13 +86,15 @@ class PostsControllerTest < Test::Unit::TestCase
       should_respond_with_content_type /rss/
       should_return_from_session :special, "'$2 off your next purchase'"
       should_return_from_session :special_user_id, '@user.id'
-      should_assign_to :user, :posts
+      should_assign_to :user, :class => User, :equals => '@user'
+      should_assign_to :posts, :class => Array, :equals => '@user.posts', :includes => '@user.posts.first'
       should_not_assign_to :foo, :bar
     end
 
     context "viewing a post on GET to #show" do
       setup { get :show, :user_id => users(:first), :id => posts(:first) }
       should_render_with_layout 'wide'
+      should_assign_to :post, :class => Post
     end
 
     context "on GET to #new" do

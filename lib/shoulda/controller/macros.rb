@@ -100,7 +100,7 @@ module ThoughtBot # :nodoc:
         def should_not_set_the_flash
           should_set_the_flash_to nil
         end
-        
+
         # Macro that creates a test asserting that filter_parameter_logging
         # is set for the specified keys
         #
@@ -126,18 +126,26 @@ module ThoughtBot # :nodoc:
         # * <tt>:class</tt> - The expected class of the instance variable being checked.
         # * <tt>:equals</tt> - A string which is evaluated and compared for equality with
         # the instance variable being checked.
+        # * <tt>:includes</tt> - A string which is evaluated and expected to be included
+        # the instance variable being checked.
+        # * <tt>:excludes</tt> - A string which is evaluated and expected not to be included
+        # the instance variable being checked.
         #
         # Example:
         #
         #   should_assign_to :user, :posts
         #   should_assign_to :user, :class => User
         #   should_assign_to :user, :equals => '@user'
+        #   should_assign_to :user, :includes => '@user'
+        #   should_assign_to :user, :excludes => '@user'
         def should_assign_to(*names)
           opts = names.extract_options!
           names.each do |name|
             test_name = "assign @#{name}"
             test_name << " as class #{opts[:class]}" if opts[:class]
             test_name << " which is equal to #{opts[:equals]}" if opts[:equals]
+            test_name << " which includes #{opts[:includes]}" if opts[:includes]
+            test_name << " which excludes #{opts[:excludes]}" if opts[:excludes]
             should test_name do
               assigned_value = assigns(name.to_sym)
               assert assigned_value, "The action isn't assigning to @#{name}"
@@ -148,6 +156,23 @@ module ThoughtBot # :nodoc:
                   assert_equal expected_value, assigned_value,
                                "Instance variable @#{name} expected to be #{expected_value}" +
                                " but was #{assigned_value}"
+                end
+              end
+              if opts[:includes]
+                instantiate_variables_from_assigns do
+                  assert assigned_value.respond_to?(:include?), "@#{name} doesn't appear to be enumerable, is of class #{assigned_value.class}"
+                  expected_value = eval(opts[:includes], self.send(:binding), __FILE__, __LINE__)
+                  assert assigned_value.include?(expected_value),
+                         "Instance variable @#{name} expected to contain #{expected_value} but was not found"
+                end
+              end
+              if opts[:excludes]
+                instantiate_variables_from_assigns do
+                  assert assigned_value.respond_to?(:include?), "@#{name} doesn't appear to be enumerable, is of class #{assigned_value.class}"
+                  unexpected_value = eval(opts[:excludes], self.send(:binding), __FILE__, __LINE__)
+                  assert !assigned_value.include?(unexpected_value),
+                         "Instance variable @#{name} expected to not contain #{unexpected_value} but was found" +
+                         " at position #{assigned_value.index(unexpected_value)}"
                 end
               end
             end
@@ -288,7 +313,7 @@ module ThoughtBot # :nodoc:
         #   should_route :edit, "/posts/1", :action => :show, :id => 1
         #   should_route :put, "/posts/1", :action => :update, :id => 1
         #   should_route :delete, "/posts/1", :action => :destroy, :id => 1
-        #   should_route :get, "/users/1/posts/1", 
+        #   should_route :get, "/users/1/posts/1",
         #     :action => :show, :id => 1, :user_id => 1
         #
         def should_route(method, path, options)
