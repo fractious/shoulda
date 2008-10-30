@@ -130,6 +130,8 @@ module ThoughtBot # :nodoc:
         # the instance variable being checked.
         # * <tt>:excludes</tt> - A string which is evaluated and expected not to be included
         # the instance variable being checked.
+        # * <tt>:size</tt> - A string which is evaluated and expected to be size of instance
+        # variable being checked.
         #
         # Example:
         #
@@ -138,6 +140,7 @@ module ThoughtBot # :nodoc:
         #   should_assign_to :user, :equals => '@user'
         #   should_assign_to :user, :includes => '@user'
         #   should_assign_to :user, :excludes => '@user'
+        #   should_assign_to :posts, :size => '@user.posts.count'
         def should_assign_to(*names)
           opts = names.extract_options!
           names.each do |name|
@@ -173,6 +176,15 @@ module ThoughtBot # :nodoc:
                   assert !assigned_value.include?(unexpected_value),
                          "Instance variable @#{name} expected to not contain #{unexpected_value} but was found" +
                          " at position #{assigned_value.index(unexpected_value)}"
+                end
+              end
+              if opts[:size]
+                instantiate_variables_from_assigns do
+                  # is this message proper?
+                  assert assigned_value.respond_to?(:size), "@#{name} doesn't appear to be sizeable, is of class #{assigned_value.class}"
+                  value_size = eval(opts[:size], self.send(:binding), __FILE__, __LINE__)
+                  assert_equal value_size, assigned_value.size,
+                    "Instance variable @#{name} expected size should be equals #{value_size} but was #{assigned_value.size}"
                 end
               end
             end

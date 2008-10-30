@@ -87,7 +87,7 @@ class PostsControllerTest < Test::Unit::TestCase
       should_return_from_session :special, "'$2 off your next purchase'"
       should_return_from_session :special_user_id, '@user.id'
       should_assign_to :user, :class => User, :equals => '@user'
-      should_assign_to :posts, :class => Array, :equals => '@user.posts', :includes => '@user.posts.first'
+      should_assign_to :posts, :class => Array, :equals => '@user.posts', :includes => '@user.posts.first', :size => '@user.posts.count'
       should_not_assign_to :foo, :bar
     end
 
