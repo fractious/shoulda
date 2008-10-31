@@ -149,6 +149,7 @@ module ThoughtBot # :nodoc:
             test_name << " which is equal to #{opts[:equals]}" if opts[:equals]
             test_name << " which includes #{opts[:includes]}" if opts[:includes]
             test_name << " which excludes #{opts[:excludes]}" if opts[:excludes]
+            test_name << " is of size #{opts[:size]}" if opts[:size]
             should test_name do
               assigned_value = assigns(name.to_sym)
               assert assigned_value, "The action isn't assigning to @#{name}"
@@ -180,8 +181,7 @@ module ThoughtBot # :nodoc:
               end
               if opts[:size]
                 instantiate_variables_from_assigns do
-                  # is this message proper?
-                  assert assigned_value.respond_to?(:size), "@#{name} doesn't appear to be sizeable, is of class #{assigned_value.class}"
+                  assert assigned_value.respond_to?(:size), "@#{name} doesn't appear to respond to :size, is of class #{assigned_value.class}"
                   value_size = eval(opts[:size], self.send(:binding), __FILE__, __LINE__)
                   assert_equal value_size, assigned_value.size,
                     "Instance variable @#{name} expected size should be equals #{value_size} but was #{assigned_value.size}"
